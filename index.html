@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Profile + To-do — ธนภัทร เสียงล้ำเลิศ</title>
+<meta name="description" content="โปรไฟล์การ์ด + To-do List เชื่อมต่อด้วย script.js โทนมินิมอลขาว-เทา" />
+<style>
+  :root{
+    --bg:#f1f5f9;
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --line:#e2e8f0;
+    --soft:#f8fafc;
+    --radius:20px;
+    --shadow:0 20px 60px rgba(15,23,42,.10);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:ui-sans-system,-apple-system,"Segoe UI",Tahoma,"Noto Sans Thai","Leelawadee UI",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.7;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:32px 16px;
+  }
+  .top-label{
+    font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.3px;
+    border:1px solid var(--line);background:#fff;padding:6px 14px;border-radius:999px;margin-bottom:18px;
+  }
+  .card{
+    width:100%;max-width:960px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    display:grid;
+    grid-template-columns:340px 1fr;
+    overflow:hidden;
+  }
+  /* ซ้าย: โปรไฟล์ */
+  .profile{
+    background:var(--soft);
+    border-right:1px solid var(--line);
+    padding:32px 28px;
+    text-align:center;
+  }
+  .avatar{
+    width:110px;height:110px;border-radius:50%;
+    margin:0 auto 14px;
+    background:#0f172a;color:#fff;
+    display:grid;place-items:center;
+    font-size:48px;font-weight:800;
+    border:4px solid #fff;
+    box-shadow:0 8px 24px rgba(15,23,42,.18);
+  }
+  .profile h1{font-size:24px;margin:8px 0 4px;line-height:1.3}
+  .profile .sub{color:var(--muted);font-size:14px;margin:0 0 18px}
+  .info{
+    text-align:left;background:#fff;border:1px solid var(--line);
+    border-radius:14px;padding:14px 16px;display:grid;gap:10px;font-size:14px;
+  }
+  .info div{display:flex;gap:10px;align-items:flex-start}
+  .info b{white-space:nowrap}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+  .tag{font-size:12px;background:#fff;border:1px solid var(--line);padding:4px 11px;border-radius:999px;color:#334155;font-weight:600}
+  .note{
+    margin-top:16px;font-size:12.5px;color:var(--muted);
+    background:#fff;border:1px dashed #cbd5e1;border-radius:12px;padding:10px 12px;text-align:left;
+  }
+  /* ขวา: To-do */
+  .todo{padding:32px 30px}
+  .todo h2{margin:0;font-size:22px}
+  .todo .desc{margin:6px 0 18px;color:var(--muted);font-size:14px}
+  .add-row{display:flex;gap:10px;margin-bottom:8px}
+  #todo-input{
+    flex:1;padding:12px 14px;border:1px solid var(--line);border-radius:12px;
+    font-size:15px;font-family:inherit;background:var(--soft);
+  }
+  #todo-input:focus{outline:2px solid #0f172a22;border-color:#0f172a;background:#fff}
+  #add-btn{
+    border:1px solid #0f172a;background:#0f172a;color:#fff;
+    padding:0 20px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;
+    white-space:nowrap;font-family:inherit;
+  }
+  #add-btn:hover{background:#1e293b}
+  #add-btn:active{transform:translateY(1px)}
+  .hint{font-size:12.5px;color:#94a3b8;margin:0 0 16px}
+  #todo-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+  .item{
+    display:flex;align-items:center;gap:12px;
+    border:1px solid var(--line);border-radius:14px;padding:12px 12px 12px 14px;background:#fff;
+    transition:opacity .18s ease, transform .18s ease, border-color .18s ease;
+  }
+  .item:hover{border-color:#cbd5e1;box-shadow:0 4px 14px rgba(15,23,42,.06)}
+  .item.removing{opacity:0;transform:translateX(18px)}
+  /* ซ่อน checkbox จริง ใช้ label เป็นกล่องติ๊ก */
+  .done{position:absolute;opacity:0;pointer-events:none}
+  .box{
+    width:22px;height:22px;border-radius:7px;border:2px solid #cbd5e1;
+    display:grid;place-items:center;flex-shrink:0;cursor:pointer;background:#fff;
+  }
+  .box::after{content:"✓";font-size:14px;font-weight:900;color:#fff;display:none}
+  .done:checked + .box{background:#0f172a;border-color:#0f172a}
+  .done:checked + .box::after{display:block}
+  .text{flex:1;font-size:15px;cursor:text;outline:none;border-radius:8px;padding:2px 4px}
+  .text:hover{background:var(--soft)}
+  .text.editing{background:#fff;outline:2px solid #0f172a22;cursor:text}
+  .done:checked ~ .text{color:var(--muted);text-decoration:line-through}
+  .del-btn{
+    width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
+    background:var(--soft);border:1px solid var(--line);color:#64748b;
+    font-size:18px;font-weight:400;line-height:1;cursor:pointer;flex-shrink:0;font-family:inherit;
+  }
+  .del-btn:hover{background:#fee2e2;border-color:#fecaca;color:#dc2626}
+  .empty{
+    border:1px dashed var(--line);border-radius:14px;padding:18px;text-align:center;
+    color:var(--muted);font-size:14px;background:var(--soft);list-style:none;
+  }
+  .count{
+    margin-top:16px;font-size:13px;color:var(--muted);
+    background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px 14px;
+  }
+  .tools{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .mini-btn{
+    border:1px solid var(--line);background:#fff;color:#334155;border-radius:10px;
+    padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;
+  }
+  .mini-btn:hover{border-color:#cbd5e1;background:#f1f5f9}
+  .mini-btn.danger{color:#b91c1c;border-color:#fecaca}
+  .mini-btn.danger:hover{background:#fee2e2}
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+    display:flex;align-items:center;gap:14px;z-index:50;
+    background:#0f172a;color:#fff;padding:10px 16px;border-radius:12px;
+    font-size:13.5px;box-shadow:0 12px 32px rgba(15,23,42,.28);max-width:92vw;
+  }
+  .toast[hidden]{display:none}
+  .toast-btn{
+    border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;
+    border-radius:8px;padding:4px 10px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;
+  }
+  .toast-btn:hover{background:rgba(255,255,255,.14)}
+  footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
+  code{background:#f1f5f9;border:1px solid var(--line);padding:1px 7px;border-radius:6px;font-size:12.5px}
+  @media(max-width:760px){
+    .card{grid-template-columns:1fr}
+    .profile{border-right:0;border-bottom:1px solid var(--line)}
+    .todo{padding:24px 20px}
+    .add-row{flex-direction:column}
+    #add-btn{padding:12px}
+  }
+</style>
+</head>
+<body>
+
+<div class="top-label">HTML + CSS + JavaScript • เชื่อมต่อด้วย script.js • Responsive</div>
+
+<main class="card">
+  <!-- ซ้าย -->
+  <section class="profile">
+    <div class="avatar">ธ</div>
+    <h1>ธนภัทร เสียงล้ำเลิศ</h1>
+    <p class="sub">นักศึกษา • IT — KMITL</p>
+
+    <div class="info">
+      <div>🎓 <span><b>เลขนักศึกษา :</b> 69070075</span></div>
+      <div>🏫 <span><b>สถาบัน :</b> IT KMITL<br />สถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบอก</span></div>
+      <div>💻 <span><b>สาขา :</b> เทคโนโลยีสารสนเทศ</span></div>
+      <div>📍 <span>กรุงเทพฯ, ประเทศไทย</span></div>
+    </div>
+
+    <div class="tags">
+      <span class="tag">HTML</span>
+      <span class="tag">CSS</span>
+      <span class="tag">JavaScript</span>
+      <span class="tag">localStorage</span>
+      <span class="tag">Minimal</span>
+    </div>
+
+    <div class="note">
+      ℹ️ ไฟล์นี้เชื่อมต่อกับ <code>script.js</code><br />
+      เพิ่ม / ติ๊ก / ลบ / แก้ไขงานได้จริง และบันทึกข้อมูลไว้ในเบราว์เซอร์ (<code>localStorage</code>)
+    </div>
+  </section>
+
+  <!-- ขวา -->
+  <section class="todo">
+    <h2>✅ สิ่งที่ต้องทำ</h2>
+    <p class="desc">พิมพ์งานใหม่แล้วกด “+ เพิ่ม” (หรือกด Enter) • ติ๊กช่องซ้ายเพื่อขีดฆ่างานที่เสร็จ • ดับเบิลคลิกที่ข้อความเพื่อแก้ไข • กด × ขวาเพื่อลบรายการ (ย้อนกลับได้)</p>
+
+    <div class="add-row">
+      <input id="todo-input" type="text" placeholder="พิมพ์งานใหม่ เช่น อ่านหนังสือสอบ..." />
+      <button id="add-btn" type="button" title="เพิ่มงานใหม่ลงในรายการ">+ เพิ่ม</button>
+    </div>
+    <p class="hint">💾 ข้อมูลถูกบันทึกอัตโนมัติใน <code>localStorage</code> ของเบราว์เซอร์ — ปิดหน้าแล้วเปิดใหม่ข้อมูลยังอยู่</p>
+
+    <ul id="todo-list">
+      <li class="item">
+        <input class="done" type="checkbox" id="done-1" data-id="1" />
+        <label class="box" for="done-1" title="ทำเสร็จแล้ว"></label>
+        <span class="text" data-id="1" title="ดับเบิลคลิกเพื่อแก้ไขข้อความ">ทบทวนบทเรียน HTML พื้นฐาน</span>
+        <button class="del-btn" type="button" data-id="1" title="ลบรายการนี้" aria-label="ลบรายการนี้">×</button>
+      </li>
+      <li class="item">
+        <input class="done" type="checkbox" id="done-2" data-id="2" />
+        <label class="box" for="done-2" title="ทำเสร็จแล้ว"></label>
+        <span class="text" data-id="2" title="ดับเบิลคลิกเพื่อแก้ไขข้อความ">ฝึกเขียน CSS Flex / Grid</span>
+        <button class="del-btn" type="button" data-id="2" title="ลบรายการนี้" aria-label="ลบรายการนี้">×</button>
+      </li>
+      <li class="item">
+        <input class="done" type="checkbox" id="done-3" data-id="3" />
+        <label class="box" for="done-3" title="ทำเสร็จแล้ว"></label>
+        <span class="text" data-id="3" title="ดับเบิลคลิกเพื่อแก้ไขข้อความ">เตรียมสไลด์ส่งอาจารย์</span>
+        <button class="del-btn" type="button" data-id="3" title="ลบรายการนี้" aria-label="ลบรายการนี้">×</button>
+      </li>
+      <li class="item">
+        <input class="done" type="checkbox" id="done-4" data-id="4" />
+        <label class="box" for="done-4" title="ทำเสร็จแล้ว"></label>
+        <span class="text" data-id="4" title="ดับเบิลคลิกเพื่อแก้ไขข้อความ">ออกกำลังกาย 30 นาที</span>
+        <button class="del-btn" type="button" data-id="4" title="ลบรายการนี้" aria-label="ลบรายการนี้">×</button>
+      </li>
+    </ul>
+
+    <div class="count">
+      <span id="stats">กำลังโหลดข้อมูล...</span>
+      <div class="tools">
+        <button type="button" class="mini-btn" id="clear-done">ลบที่ทำเสร็จแล้ว</button>
+        <button type="button" class="mini-btn danger" id="reset-all">ล้างทั้งหมด</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>© 2026 ธนภัทร เสียงล้ำเลิศ (69070075) • index.html + script.js โทนมินิมอลขาว-เทา</footer>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="script.js" defer></script>
+
+</body>
+</html>
